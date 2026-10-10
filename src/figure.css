@@ -1,0 +1,73 @@
+
+.iso{
+  --anatomy-page:#05041f;--anatomy-card:#080630;--anatomy-text:#a9acc9;--anatomy-strong:#eff1f4;--anatomy-muted:#7175a0;
+  --anatomy-paper:#080630;--anatomy-face:#100e44;--anatomy-top:#12104a;
+  --anatomy-shade-0:#060427;--anatomy-shade-1:#07052d;--anatomy-shade-2:#0b0938;--anatomy-shade-3:#0e0c40;
+  --anatomy-lit-top:#1c1a5c;--anatomy-lit-shade:#141249;
+  --anatomy-hi:#d9dcee;--anatomy-mid:#7377a6;--anatomy-lo:#43467a;--anatomy-faint:#262859;--anatomy-lit:#ffffff;
+  --anatomy-halo:#020114;--anatomy-halo-opacity:.9;--anatomy-dot:#e6e8f6;
+  --hh-amber:#fcaf15;--hh-amber-0:#a56a02;--hh-amber-1:#b97904;--hh-amber-2:#cd8807;--hh-amber-3:#e0980b;--hh-amber-4:#f0a511;--hh-amber-rim:#ffd27a;
+  --hh-face:#ffffff;--hh-wall-0:#8388b5;--hh-wall-1:#959ac3;--hh-wall-2:#a8acd0;--hh-wall-3:#bbbfdd;--hh-wall-4:#cfd2e9;--hh-rim:#c4c8e3;--hh-crease:#a2a7cc;
+  --hh-shadow:#020114;--hh-shadow-opacity:.7;--hh-glow-opacity:.5;--hh-glow-blend:screen;
+}
+.iso[data-theme="light"]{
+  --anatomy-page:#eff1f4;--anatomy-card:#fbfbfd;--anatomy-text:#4a5278;--anatomy-strong:#080630;--anatomy-muted:#8489a8;
+  --anatomy-paper:#fbfbfd;--anatomy-face:#ffffff;--anatomy-top:#ffffff;
+  --anatomy-shade-0:#d9dbe6;--anatomy-shade-1:#e3e5ed;--anatomy-shade-2:#eceef3;--anatomy-shade-3:#f4f5f9;
+  --anatomy-lit-top:#ffffff;--anatomy-lit-shade:#ecedf3;
+  --anatomy-hi:#1b1a45;--anatomy-mid:#858aaa;--anatomy-lo:#b1b5cc;--anatomy-faint:#d5d7e4;--anatomy-lit:#080630;
+  --anatomy-halo:#6f7396;--anatomy-halo-opacity:.3;--anatomy-dot:#2b2a55;
+  --hh-face:#080630;--hh-wall-0:#1a1846;--hh-wall-1:#242251;--hh-wall-2:#2f2d5d;--hh-wall-3:#3b3969;--hh-wall-4:#484676;--hh-rim:#080630;--hh-crease:#5a5888;
+  --hh-amber-rim:#b97904;
+  --hh-shadow:#4a5278;--hh-shadow-opacity:.34;--hh-glow-opacity:.62;--hh-glow-blend:multiply;
+}
+html{color-scheme:dark}
+.hh-head{margin:0 0 28px}
+.hh-kicker{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 18px;color:var(--anatomy-muted);font-family:var(--anatomy-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase}
+.hh-theme{color:var(--anatomy-muted);text-decoration:none;padding:5px 9px;margin:-5px -9px;box-shadow:inset 0 0 0 1px var(--anatomy-faint)}
+.hh-theme:hover,.hh-theme:focus-visible{color:var(--anatomy-strong);box-shadow:inset 0 0 0 1px var(--anatomy-mid);outline:none}
+.hh-head h1{margin:0 0 10px;color:var(--anatomy-strong);font:400 34px/1.12 Georgia,"Iowan Old Style","Times New Roman",serif;letter-spacing:-.005em;text-wrap:balance}
+.hh-lede{margin:0;max-width:56ch;color:var(--anatomy-text);font-size:15px;line-height:1.6}
+.iso-figure{margin:0}
+.iso-stage{cursor:pointer;touch-action:pan-y;-webkit-tap-highlight-color:transparent}
+.iso-stage:focus{outline:none}
+.iso-stage:focus-visible{outline:1px solid var(--anatomy-muted);outline-offset:6px}
+.hh-live{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.hh-body{fill:var(--hh-wall-2);stroke:var(--hh-rim);stroke-width:1.5px;stroke-linejoin:round;paint-order:stroke}
+.hh-wall{stroke:none}
+.hh-wall[data-shade="0"]{fill:var(--hh-wall-0)}
+.hh-wall[data-shade="1"]{fill:var(--hh-wall-1)}
+.hh-wall[data-shade="2"]{fill:var(--hh-wall-2)}
+.hh-wall[data-shade="3"]{fill:var(--hh-wall-3)}
+.hh-wall[data-shade="4"]{fill:var(--hh-wall-4)}
+.hh-face{fill:var(--hh-face);stroke:none}
+.iso-line.hh-crease{stroke:var(--hh-crease);stroke-width:.5px}
+.hh-glyph[data-amber]{--hh-face:var(--hh-amber);--hh-wall-0:var(--hh-amber-0);--hh-wall-1:var(--hh-amber-1);--hh-wall-2:var(--hh-amber-2);--hh-wall-3:var(--hh-amber-3);--hh-wall-4:var(--hh-amber-4);--hh-rim:var(--hh-amber-rim);--hh-crease:var(--hh-amber-rim)}
+.hh-shadow{fill:var(--hh-shadow);stroke:none;filter:blur(2.4px);opacity:var(--hh-shadow-opacity);transform:translate(1.5px,2.5px)}
+.hh-glow{fill:var(--hh-amber);stroke:none;filter:blur(7px);opacity:var(--hh-glow-opacity);mix-blend-mode:var(--hh-glow-blend)}
+.iso-line.hh-print{stroke-width:.5px}
+.iso-line.hh-lead{stroke:var(--hh-amber);stroke-width:.8px;opacity:.9}
+.hh-pilot{fill:var(--hh-amber)}
+.iso-swatch[data-mark="lit"] path{stroke:var(--hh-amber)}
+.hh-parts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;margin:18px 0 0;background:var(--anatomy-faint);box-shadow:0 0 0 1px var(--anatomy-faint)}
+.hh-part{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:baseline;padding:12px 14px;border:0;background:var(--anatomy-page);color:var(--anatomy-text);font:inherit;text-align:left;cursor:pointer;transition:background-color 160ms var(--anatomy-ease),color 160ms var(--anatomy-ease)}
+.hh-part-no{grid-row:span 2;align-self:start;padding-top:3px;color:var(--anatomy-muted);font-family:var(--anatomy-mono);font-size:10.5px;letter-spacing:.04em}
+.hh-part-name{color:var(--anatomy-strong);font:400 17px/1.2 Georgia,"Iowan Old Style","Times New Roman",serif;letter-spacing:.02em}
+.hh-part[data-group="amp"] .hh-part-name{color:var(--hh-amber)}
+.iso[data-theme="light"] .hh-part[data-group="amp"] .hh-part-name{color:#b97904}
+.hh-part-note{color:var(--anatomy-muted);font-family:var(--anatomy-mono);font-size:10.5px;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hh-part:hover,.hh-part[aria-pressed="true"]{background:var(--anatomy-card)}
+.hh-part[aria-pressed="true"]{box-shadow:inset 0 2px 0 0 var(--hh-amber)}
+.hh-part:focus-visible{outline:1px solid var(--anatomy-muted);outline-offset:-3px}
+.hh-foot{margin:34px 0 0;padding-top:16px;box-shadow:inset 0 1px 0 0 var(--anatomy-faint);color:var(--anatomy-muted);font-size:12.5px;line-height:1.6}
+.hh-foot p{margin:0}
+.hh-foot a{color:var(--anatomy-text);text-underline-offset:3px;text-decoration-color:var(--anatomy-lo)}
+.hh-foot a:hover{color:var(--anatomy-strong)}
+@media (max-width:640px){
+  .iso-page{margin:36px auto 64px}
+  .hh-head h1{font-size:27px}
+  .hh-parts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .iso-plate{overflow:hidden}
+  .iso-plate .iso-svg{width:118%;margin:0 -9%}
+}
+@media (prefers-reduced-motion:reduce){.hh-part{transition:none}}
