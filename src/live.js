@@ -1,4 +1,4 @@
-const { P: CAMERA, VIEW, FRONT, BACK, PULL, APART, SPRING, STAGGER: ORDER, STUDS, LEAD, REST, GLYPHS: LIST } = DATA;
+const { P: CAMERA, VIEW, FRONT, BACK, PULL, APART, SPRING, STAGGER: ORDER, STUDS, LEAD, RAIN, REST, GLYPHS: LIST } = DATA;
 const stage = document.querySelector(".iso-stage");
 const figure = stage.querySelector("svg");
 const readout = document.querySelector("[data-readout]");
@@ -7,6 +7,8 @@ const buttons = [...document.querySelectorAll(".hh-part")];
 const still = matchMedia("(prefers-reduced-motion: reduce)");
 const nodes = LIST.map((_, index) => figure.querySelector(`[data-glyph="${index}"]`));
 const shadows = LIST.map((_, index) => figure.querySelector(`[data-shadow="${index}"]`));
+const lits = LIST.map((_, index) => figure.querySelector(`[data-lit="${index}"]`));
+const drops = RAIN.drops.map(([speed, period, phase], index) => ({ node: figure.querySelector(`#hh-rain-${index}`), speed, period, phase, shown: null }));
 const glow = figure.querySelector("[data-glow]");
 const leads = [figure.querySelector('[data-lead="back"]'), figure.querySelector('[data-lead="front"]')];
 const AMBER = LIST.findIndex((glyph) => glyph.amber);
@@ -69,7 +71,7 @@ function say() {
     const members = LIST.filter((glyph) => glyph.group === group);
     const out = parts[LIST.findIndex((glyph) => glyph.group === group)].at;
     text = `${group === "amp" ? "&" : group.toUpperCase()} · ${members.length} ${members.length === 1 ? "glyph" : "glyphs"} · out ${out.toFixed(1)}`;
-  } else if (picked >= 0) text = `${LIST[picked].letter} · ${LIST[picked].word} · ${LIST[picked].size} · out ${parts[picked].at.toFixed(1)}`;
+  } else if (picked >= 0) text = `${LIST[picked].letter} · ${LIST[picked].word} · ${LIST[picked].size} · ${LIST[picked].bytes} B · out ${parts[picked].at.toFixed(1)}`;
   else if (moving) text = "closing up";
   if (text !== said) {
     said = text;
@@ -88,6 +90,8 @@ function draw() {
     else node.removeAttribute("transform");
     holdStill(node, [dx, dy]);
     if (shadows[index]) shadows[index].style.opacity = String(shade / (1 + part.at / 9));
+    const bare = Math.min(1, Math.max(0, part.at / 20));
+    lits[index].setAttribute("opacity", (bare * bare * (3 - 2 * bare)).toFixed(3));
     if (index === AMBER) {
       const far = part.at / 30;
       glow.style.opacity = String(shine / (1 + far * far));
@@ -114,6 +118,19 @@ function tour() {
   picked = TOUR[index].pick ?? -1;
   group = TOUR[index].group ?? "";
   aim();
+}
+
+let rained = -1;
+
+function rain() {
+  if (clock - rained < RAIN.tick) return;
+  rained = clock;
+  for (const drop of drops) {
+    const offset = Math.round(Math.floor(((drop.phase + drop.speed * clock) % drop.period) / RAIN.pitch) * RAIN.pitch * 100) / 100;
+    if (offset === drop.shown) continue;
+    drop.shown = offset;
+    drop.node.setAttribute("gradientTransform", `translate(0 ${offset})`);
+  }
 }
 
 function tick(now) {
@@ -147,8 +164,9 @@ function tick(now) {
     }
     if (part.due || part.at !== part.target) moving = true;
   }
+  if (!calm) rain();
   draw();
-  frame = visible && (moving || touring) ? requestAnimationFrame(tick) : 0;
+  frame = visible && (moving || touring || !calm) ? requestAnimationFrame(tick) : 0;
 }
 
 function run() {

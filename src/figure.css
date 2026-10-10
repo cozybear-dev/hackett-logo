@@ -9,6 +9,7 @@
   --hh-amber:#fcaf15;--hh-amber-0:#a56a02;--hh-amber-1:#b97904;--hh-amber-2:#cd8807;--hh-amber-3:#e0980b;--hh-amber-4:#f0a511;--hh-amber-rim:#ffd27a;
   --hh-face:#ffffff;--hh-wall-0:#8388b5;--hh-wall-1:#959ac3;--hh-wall-2:#a8acd0;--hh-wall-3:#bbbfdd;--hh-wall-4:#cfd2e9;--hh-rim:#c4c8e3;--hh-crease:#a2a7cc;
   --hh-shadow:#020114;--hh-shadow-opacity:.7;--hh-glow-opacity:.5;--hh-glow-blend:screen;
+  --hh-code:#8f99f2;--hh-code-head:#ffffff;--hh-code-base:.16;--hh-code-mid:.5;--hh-code-tail:.95;--hh-code-lit:#c9d0ff;--hh-code-ground:.1;--hh-code-amber:var(--hh-amber);
 }
 .iso[data-theme="light"]{
   --anatomy-page:#eff1f4;--anatomy-card:#fbfbfd;--anatomy-text:#4a5278;--anatomy-strong:#080630;--anatomy-muted:#8489a8;
@@ -20,6 +21,7 @@
   --hh-face:#080630;--hh-wall-0:#1a1846;--hh-wall-1:#242251;--hh-wall-2:#2f2d5d;--hh-wall-3:#3b3969;--hh-wall-4:#484676;--hh-rim:#080630;--hh-crease:#5a5888;
   --hh-amber-rim:#b97904;
   --hh-shadow:#4a5278;--hh-shadow-opacity:.34;--hh-glow-opacity:.62;--hh-glow-blend:multiply;
+  --hh-code:#4a5278;--hh-code-head:#1b1a45;--hh-code-base:.22;--hh-code-mid:.55;--hh-code-tail:.95;--hh-code-lit:#2b2a5c;--hh-code-ground:.08;--hh-code-amber:#b97904;
 }
 html{color-scheme:dark}
 .hh-head{margin:0 0 28px}
@@ -46,6 +48,16 @@ html{color-scheme:dark}
 .hh-shadow{fill:var(--hh-shadow);stroke:none;filter:blur(2.4px);opacity:var(--hh-shadow-opacity);transform:translate(1.5px,2.5px)}
 .hh-glow{fill:var(--hh-amber);stroke:none;filter:blur(7px);opacity:var(--hh-glow-opacity);mix-blend-mode:var(--hh-glow-blend)}
 .iso-line.hh-print{stroke-width:.5px}
+.hh-code,.hh-lit{pointer-events:none;user-select:none;-webkit-user-select:none}
+.hh-code text,.hh-lit text{font-family:var(--anatomy-mono);font-size:4.7px;text-anchor:middle}
+.hh-code stop{stop-color:var(--hh-code)}
+.hh-code stop[data-s="base"]{stop-opacity:var(--hh-code-base)}
+.hh-code stop[data-s="mid"]{stop-opacity:var(--hh-code-mid)}
+.hh-code stop[data-s="tail"]{stop-opacity:var(--hh-code-tail)}
+.hh-code stop[data-s="head"]{stop-color:var(--hh-code-head);stop-opacity:1}
+.hh-lit text{fill:var(--hh-code-lit)}
+.hh-lit-ground{fill:var(--hh-code-lit);fill-opacity:var(--hh-code-ground);stroke:none}
+.hh-lit[data-amber]{--hh-code-lit:var(--hh-code-amber)}
 .iso-line.hh-lead{stroke:var(--hh-amber);stroke-width:.8px;opacity:.9}
 .hh-pilot{fill:var(--hh-amber)}
 .iso-swatch[data-mark="lit"] path{stroke:var(--hh-amber)}

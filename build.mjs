@@ -184,6 +184,109 @@ function plinth() {
   return out.join("");
 }
 
+const SCREEN = { x0: -182, x1: 190, bottom: 24.5, top: 150.5, inset: 1.5, columns: 94, rows: 22, size: 4.7 };
+const CELL = { dx: (SCREEN.x1 - SCREEN.x0 - SCREEN.inset * 2) / SCREEN.columns, dz: (SCREEN.top - SCREEN.bottom - SCREEN.inset * 2) / SCREEN.rows };
+const FACE = k.sideMatrix([0, 0.05], 0, P, "left");
+const columnAt = (column) => SCREEN.x0 + SCREEN.inset + (column + 0.5) * CELL.dx;
+const baselineAt = (row) => SCREEN.top - SCREEN.inset - (row + 1) * CELL.dz + 1;
+const two = (value) => Math.round(value * 100) / 100;
+
+function seeded(seed) {
+  let state = seed;
+  return () => {
+    state = (state + 0x6d2b79f5) | 0;
+    let mixed = Math.imul(state ^ (state >>> 15), 1 | state);
+    mixed = (mixed + Math.imul(mixed ^ (mixed >>> 7), 61 | mixed)) ^ mixed;
+    return ((mixed ^ (mixed >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const SOURCE = (() => {
+  const split = (LINES[0].base + LINES[1].cap) / 2;
+  const taken = GLYPHS.map(() => 0);
+  const cells = [];
+  for (let column = 0; column < SCREEN.columns; column++) {
+    const x = columnAt(column);
+    const list = [];
+    for (let row = 0; row < SCREEN.rows; row++) {
+      const z = baselineAt(row) + CELL.dz / 2 - 1;
+      const line = z > split ? 0 : 1;
+      let owner = null;
+      let reach = Infinity;
+      for (const glyph of GLYPHS) {
+        if (glyph.line !== line) continue;
+        const gap = Math.max(glyph.world.x0 - x, 0, x - glyph.world.x1);
+        if (gap < reach) {
+          reach = gap;
+          owner = glyph;
+        }
+      }
+      list.push(owner.source[taken[owner.index]++ % owner.source.length]);
+    }
+    cells.push(list);
+  }
+  return cells;
+})();
+
+const columnSvg = (column, from, to, fill = "") => {
+  const x = two(columnAt(column));
+  const rows = Array.from({ length: to - from }, (_, index) => from + index);
+  return `<text x="${rows.map(() => x).join(" ")}" y="${rows.map((row) => two(-baselineAt(row))).join(" ")}"${fill}>${rows.map((row) => SOURCE[column][row]).join("")}</text>`;
+};
+
+const RAIN = (() => {
+  const random = seeded(0x4848);
+  const height = SCREEN.rows * CELL.dz;
+  return SOURCE.map(() => {
+    const period = CELL.dz * Math.round(SCREEN.rows * (1.5 + random() * 1.7));
+    const length = CELL.dz * Math.round(7 + random() * 11);
+    return { period, length, speed: CELL.dz * (3.5 + random() * 5.5), phase: random() * period, height };
+  });
+})();
+const rainAt = (drop, time) => two(Math.floor(((drop.phase + drop.speed * time) % drop.period) / CELL.dz) * CELL.dz);
+
+function screen() {
+  const corner = 2;
+  const outline = [];
+  const corners = [
+    [SCREEN.x1 - corner, SCREEN.bottom + corner, -90],
+    [SCREEN.x1 - corner, SCREEN.top - corner, 0],
+    [SCREEN.x0 + corner, SCREEN.top - corner, 90],
+    [SCREEN.x0 + corner, SCREEN.bottom + corner, 180],
+  ];
+  for (const [x, z, start] of corners) {
+    for (let step = 0; step <= 5; step++) {
+      const angle = ((start + step * 18) * Math.PI) / 180;
+      outline.push([x + corner * Math.cos(angle), z + corner * Math.sin(angle)]);
+    }
+  }
+  const top = -(SCREEN.top - SCREEN.inset);
+  const drops = RAIN.map((drop, column) => {
+    const head = drop.length / drop.period;
+    const neck = (drop.length - CELL.dz) / drop.period;
+    const stops = [
+      [0, "base"],
+      [neck * 0.45, "mid"],
+      [neck, "tail"],
+      [neck, "head"],
+      [head, "head"],
+      [head, "base"],
+      [1, "base"],
+    ];
+    return `<linearGradient id="hh-rain-${column}" gradientUnits="userSpaceOnUse" spreadMethod="repeat" x1="0" y1="${two(top)}" x2="0" y2="${two(top + drop.period)}" gradientTransform="translate(0 ${rainAt(drop, 0)})">${stops.map(([offset, kind]) => `<stop offset="${offset.toFixed(4)}" data-s="${kind}"/>`).join("")}</linearGradient>`;
+  });
+  const out = [L(onWall(outline, 0, true), { tone: "lo" })];
+  out.push(`<g class="hh-code" transform="${FACE}"><defs>${drops.join("")}</defs>${SOURCE.map((_, column) => columnSvg(column, 0, SCREEN.rows, ` fill="url(#hh-rain-${column})"`)).join("")}</g>`);
+  for (const glyph of GLYPHS) {
+    const print = faceOf(glyph.contours, 0, P);
+    const columns = SOURCE.map((_, column) => column).filter((column) => columnAt(column) > glyph.world.x0 - CELL.dx && columnAt(column) < glyph.world.x1 + CELL.dx);
+    const rows = Array.from({ length: SCREEN.rows }, (_, row) => row).filter((row) => baselineAt(row) > glyph.world.z0 - CELL.dz && baselineAt(row) < glyph.world.z1 + CELL.dz);
+    const text = rows.length ? columns.map((column) => columnSvg(column, rows[0], rows[rows.length - 1] + 1)).join("") : "";
+    out.push(`<g class="hh-lit" data-lit="${glyph.index}"${glyph.amber ? " data-amber" : ""} opacity="0"><path class="hh-lit-ground" d="${print}"/><clipPath id="hh-foot-${glyph.index}"><path d="${print}"/></clipPath><g clip-path="url(#hh-foot-${glyph.index})"><g transform="${FACE}">${text}</g></g></g>`);
+  }
+  return out.join("");
+}
+
 const byStud = (studs) => [...studs].sort((a, b) => k.depthOf([a.x, 0, a.z], P) - k.depthOf([b.x, 0, b.z], P));
 
 function panel() {
@@ -227,8 +330,9 @@ function panel() {
   out.push(`<path class="hh-glow" data-glow d="${faceOf(AMP.contours, 0, P)}"/>`);
   for (const glyph of GLYPHS) {
     if (!glyph.amber) out.push(`<path class="hh-shadow" data-shadow="${glyph.index}" d="${faceOf(glyph.contours, 0, P)}"/>`);
-    out.push(`<path class="iso-line hh-print" data-tone="faint" d="${faceOf(glyph.contours, 0, P)}"/>`);
   }
+  out.push(screen());
+  for (const glyph of GLYPHS) out.push(`<path class="iso-line hh-print" data-tone="faint" d="${faceOf(glyph.contours, 0, P)}"/>`);
   for (const glyph of GLYPHS) {
     for (const stud of byStud(glyph.studs)) out.push(turned("sleeve", outward([stud.x, 0, stud.z]), 0, SLEEVE, 1.5, { tone: "mid" }));
   }
@@ -292,6 +396,7 @@ function driver() {
   const plate = { x: DRIVER.x + 26, y: DRIVER.y + 14, w: 26, d: 7.5, r: 0.8 };
   out.push(slab("driver.label", plate, top, 0.5, { steps: 3, tone: "lo", crease: "none" }));
   out.push(L([0, 1].map((row) => k.lineOnTop([plate.x + 2.4, plate.y + 2.4 + row * 2.6], [plate.x + plate.w - 2.4 - row * 9, plate.y + 2.4 + row * 2.6], top + 0.5, P)).join(""), { tone: "lo", free: true }));
+  out.push(D(k.dotGrid(DRIVER.x + 38, DRIVER.y + 5.2, 5, 2, 2.3, top, P), { size: 0.42, tone: "hi", pulse: true }));
   const lamp = [DRIVER.x + 31, DRIVER.y + 8];
   out.push(round("driver.lamp", lamp[0], lamp[1], 2.2, top, 1.1, { steps: 20, tone: "mid" }));
   const lit = at([lamp[0], lamp[1], top + 1.1]);
@@ -397,7 +502,7 @@ const svg = k.figureSvg({
   width: WIDTH,
   height: HEIGHT,
   label:
-    "The Hunt & Hackett wordmark built as a stand-off sign on an assembly stand. Eleven white letters and one amber ampersand stand on studs in front of a navy panel, HUNT & above HACKETT, with rules along the panel measuring its two cap heights and its width. Any glyph slides out along its studs, and the ampersand stays lit on a coiled lead.",
+    "The Hunt & Hackett wordmark built as a stand-off sign on an assembly stand. Eleven white letters and one amber ampersand stand on studs in front of a navy panel, HUNT & above HACKETT, with rules along the panel measuring its two cap heights and its width. Any glyph slides out along its studs, and the ampersand stays lit on a coiled lead. The panel is a display on which the wordmark's own path data falls in columns; a glyph that slides out leaves its outline lit there.",
   body: [base(), block(BLOCKS[0]), strut(POSTS[0], -1), upstand(POSTS[0]), plinth(), block(BLOCKS[1]), panel(), upstand(POSTS[1]), strut(POSTS[1], 1), cap(), floor(), driver(), cable(), letters()],
 });
 
@@ -428,6 +533,7 @@ const DATA = {
   STAGGER,
   STUDS,
   LEAD: { x: AMP.lead.x, z: AMP.lead.z, r: LEAD_R, turns: TURNS, from: 1.6 },
+  RAIN: { pitch: two(CELL.dz), tick: 0.07, drops: RAIN.map((drop) => [two(drop.speed), two(drop.period), two(drop.phase)]) },
   REST: `${GLYPHS.length} glyphs · caps ${caps[0]} / ${caps[1]} · 1 amber`,
   GLYPHS: GLYPHS.map((glyph) => ({
     letter: glyph.letter,
@@ -435,6 +541,7 @@ const DATA = {
     group: glyph.group,
     amber: glyph.amber,
     size: `${glyph.width.toFixed(1)} × ${glyph.height.toFixed(1)}`,
+    bytes: glyph.source.length,
     box: [glyph.world.x0, glyph.world.x1, glyph.world.z0, glyph.world.z1].map(one),
   })),
 };
@@ -454,9 +561,10 @@ const plate = k.plateHtml({
   keys: [
     { mark: "lit", label: "The ampersand: the one amber part, lit on its own lead" },
     { mark: "raised", label: "Eleven letters on stand-off studs, set at two cap heights" },
+    { mark: "dotted", label: "The panel: each glyph’s own path data, falling" },
     { mark: "dim", label: "Guide lines: both baselines and both cap lines" },
   ],
-  caption: `The wordmark is ${W.WIDTH} units wide and ${W.HEIGHT} tall. HUNT & is set ${caps[0]} tall and HACKETT ${caps[1]}, a ratio of ${W.METRICS.ratio.toFixed(2)}, with ${W.METRICS.leading.toFixed(1)} units between the lines; every glyph is its own part, and one of the twelve is amber.`,
+  caption: `The wordmark is ${W.WIDTH} units wide and ${W.HEIGHT} tall. HUNT & is set ${caps[0]} tall and HACKETT ${caps[1]}, a ratio of ${W.METRICS.ratio.toFixed(2)}, with ${W.METRICS.leading.toFixed(1)} units between the lines; every glyph is its own part, and one of the twelve is amber. The panel behind them shows the start of each glyph’s path data, out of the ${W.BYTES.toLocaleString("en")} characters the mark is drawn from, and a glyph that slides out leaves its outline there, written in its own.`,
   body: `<div class="iso-stage" tabindex="0" role="group" aria-label="Hunt and Hackett wordmark as a stand-off sign. Arrow keys step through the twelve glyphs, Space takes the sign apart, Escape puts it back.">${svg}</div><p class="hh-live" aria-live="polite"></p>`,
 });
 
@@ -471,7 +579,7 @@ const HEAD = `<link rel="icon" href="data:image/svg+xml,${encodeURIComponent(ICO
 const other = (theme) => (theme === "dark" ? `<a class="hh-theme" href="light.html">Light</a>` : `<a class="hh-theme" href="./">Dark</a>`);
 
 const page = (theme) => {
-  const body = `<header class="hh-head"><p class="hh-kicker"><span>Anatomy</span>${other(theme)}</p><h1>The wordmark, taken apart</h1><p class="hh-lede">Twelve glyphs on two baselines. Eleven are white; the ampersand is amber and carries the mark’s only flourish.</p></header>${plate}${controls}<footer class="hh-foot"><p>Drawn from the wordmark’s own outlines with the <a href="https://github.com/wheresryan22/anatomy">Anatomy</a> skill. <a href="https://github.com/cozybear-dev/hackett-logo">Source</a>.</p><p>An unofficial illustration. Hunt &amp; Hackett and its logo are trademarks of their owner.</p></footer>`;
+  const body = `<header class="hh-head"><p class="hh-kicker"><span>Anatomy</span>${other(theme)}</p><h1>The wordmark, taken apart</h1><p class="hh-lede">Twelve glyphs on two baselines, standing in front of their own source: ${W.BYTES.toLocaleString("en")} characters of path data. Eleven are white; the ampersand is amber.</p></header>${plate}${controls}<footer class="hh-foot"><p>Drawn from the wordmark’s own outlines with the <a href="https://github.com/wheresryan22/anatomy">Anatomy</a> skill. <a href="https://github.com/cozybear-dev/hackett-logo">Source</a>.</p><p>An unofficial illustration. Hunt &amp; Hackett and its logo are trademarks of their owner.</p></footer>`;
   const html = k.pageHtml({ title: "Hunt & Hackett · the wordmark, taken apart", theme, body, script: read("kit/iso-kit.mjs").replace(/^export /gm, "") + `\nconst DATA = ${JSON.stringify(DATA)};\n` + read("src/live.js"), width: 860 });
   return html.replace("</style></head>", `${read("src/figure.css")}</style>${HEAD}</head>`);
 };

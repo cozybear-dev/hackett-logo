@@ -256,7 +256,7 @@ const LINES = [
 function read() {
   const raw = SOURCE.paths.map(({ d, amber }) => {
     const contours = contoursOf(d);
-    return { contours, amber, box: boxOf(contours) };
+    return { contours, amber, source: d, box: boxOf(contours) };
   });
   const split = HEIGHT / 2;
   const rows = [raw.filter((glyph) => (glyph.box.y0 + glyph.box.y1) / 2 < split), raw.filter((glyph) => (glyph.box.y0 + glyph.box.y1) / 2 >= split)];
@@ -272,6 +272,7 @@ function read() {
         line,
         word: LINES[line].name,
         amber: glyph.amber,
+        source: glyph.source,
         contours: glyph.contours,
         outer,
         box: glyph.box,
@@ -284,6 +285,8 @@ function read() {
 }
 
 export const GLYPHS = read();
+
+export const BYTES = GLYPHS.reduce((sum, glyph) => sum + glyph.source.length, 0);
 
 const flatOf = (letter, line) => GLYPHS.find((glyph) => glyph.letter === letter && glyph.line === line);
 
